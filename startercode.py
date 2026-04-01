@@ -39,7 +39,7 @@ def load_json(filename):
     try:
         with open(filename, "r") as file:
             data = json.load(file)
-        print(data)
+            return data
     except(FileNotFoundError, json.JSONDecodeError):
         return {}
 
@@ -74,7 +74,17 @@ def search_breed(breed_id):
         JSON body as a dict (with a top-level 'data' key on success), OR None if the
         request failed or the response does not represent a successful breed lookup.
     """
-    pass
+    url = f"https://dogapi.dog/api/v2/breeds/{breed_id}"
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            return None
+        parsed_json = response.json()
+
+        if "data" not in parsed_json or parsed_json["data"] is None:
+            return None
+    except:
+        return None
 
 
 def update_cache(breed_ids, cache_file):
