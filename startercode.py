@@ -2,12 +2,12 @@
 # Your name: Annika Gurnani
 # Your student id: 29363715
 # Your email: agurnani@umich.edu
-# Who or what you worked with on this homework (including generative AI like ChatGPT):
+# Who or what you worked with on this homework (including generative AI like ChatGPT): asked ChatGPT for help debugging 
 # If you worked with generative AI also add a statement for how you used it.
 # e.g.:
 # Asked ChatGPT for help debugging and understanding the JSON structure
 #
-# Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why?
+# Did your use of GenAI on this assignment align with your goals and guidelines in your Gen AI contract? If not, why? yes
 #
 # --- ARGUMENTS & EXPECTED RETURN VALUES PROVIDED --- #
 # --- SEE INSTRUCTIONS FOR FULL DETAILS ON METHOD IMPLEMENTATION --- #
@@ -40,7 +40,7 @@ def load_json(filename):
         with open(filename, "r") as file:
             data = json.load(file)
             return data
-    except(FileNotFoundError, json.JSONDecodeError):
+    except:
         return {}
 
 
@@ -141,8 +141,8 @@ def get_longest_lifespan_breed(cache_file):
     """
     cache = load_json(cache_file)
 
-    name = ""
-    longest_lifespan = 0
+    best_name = ""
+    best_lifespan = 0
 
     for entry in cache.values():
         try:
@@ -154,13 +154,13 @@ def get_longest_lifespan_breed(cache_file):
                 continue
 
             if max_lifespan > best_lifespan:
-                name = breed_name
+                best_name = breed_name
                 best_lifespan = max_lifespan
             elif max_lifespan == best_lifespan and breed_name < best_name:
                 best_name = breed_name
-        except(KeyError, TypeError):
+        except:
             continue
-    if best_name is "":
+    if best_name == "":
         return "No breeds found"
     
     return (best_name, best_lifespan)
@@ -189,7 +189,7 @@ def get_groups_above_cutoff(cutoff, cache_file):
         try:
             group_id = entry['data']['relationships']['group']['data']['id']
             group_counts[group_id] = group_counts.get(group_id, 0) + 1
-        except(KeyError, TypeError):
+        except:
             continue
     
     result = {}
@@ -220,6 +220,46 @@ def recommend_breeds_in_same_group(breed_name, cache_file):
             "No group information available for '{breed_name}'."  (no group id)
             "No recommendations found based on '{breed_name}'."  (no other breeds in that group)
     """
+    cache = load_json(cache_file)
+
+    if cache == {}:
+        return "No breed data found in cache."
+    
+    target_group_id = ""
+    target_name = ""
+
+    for entry in cache.values():
+        try:
+            current_name = entry["data"]["attributes"]["name"]
+            if current_name.lower() == breed_name.lower():
+                target_name = current_name
+                try: 
+                    target_group_id = entry["data"]["relaitonships"]["group"]["data"]["id"]
+                except:
+                    return f"No group information available for '{breed_name}'."
+                break
+        except:
+            continue 
+
+    if target_name == "":
+        return f"'{breed_name}' is not in the cache."
+    
+    recommendations = []
+
+    for entry in cache.values():
+        try:
+            current_name = entry["data"]["attributes"]["name"]
+            current_group_id = entry["data"]["relationships"]["group"]["data"]["id"]
+
+            if current_group_id == target_group_id and current_name.lower() != breed_name.lower():
+                recommendations.append(current_name)
+        except:
+            continue
+
+    if len(recommendations) == 0:
+        return f"No recommendations found based on '{breed_name}'."
+    
+    return sorted(recommendations)
 
 
 class TestHomeworkDogAPI(unittest.TestCase):
